@@ -16,7 +16,7 @@ Not all the utilities have been ported, it's a matter of time, thank you for you
 ### API tools:
 - `zapi.py` -		Interactive Zabbix API client.
 
-### (STILL MISSING) History related: 
+### History related: 
 - `zgethistory.py` -	Gets values from history for an itemid.
 
 ### (STILL MISSING) Inv related:
@@ -24,7 +24,7 @@ Not all the utilities have been ported, it's a matter of time, thank you for you
 - `zgetinventory.py` -  Prints host inventory in CSV format.
 - `zhostupdater.py` - Updates host properties.
 
-### (STILL MISSING) Item related:
+### Item related:
 - `zhitemfinder.py` -	Finds items on a host.	
 - `zgethistory.py` - 	Get item values from history (Trends are not supported!).
 

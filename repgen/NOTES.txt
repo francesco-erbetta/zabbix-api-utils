@@ -1,0 +1,50 @@
+Logica di generazione:
+
+visto che i grafici sono specifici di un dato template, partiamo dalla
+lista del Templates:
+
+"Windows by Zabbix agent"
+"Linux by Zabbix agent"
+
+
+Troviamo la lista degli host per un dato template:
+zthostfinder.py "Windows by Zabbix agent"
+ACIWINAUX1
+ACIWDC1
+ACIWDC2
+ACIWINAUX2
+ACIWCA1
+
+zhgraphfinder.py -e ACIWINAUX1
+3066:Windows: CPU jumps
+3067:Windows: CPU usage
+3068:Windows: CPU utilization
+3069:Windows: Memory utilization
+3070:Windows: Swap usage
+3071:OS DISK(C:): Disk space usage
+3072:Software Archive(E:): Disk space usage
+3073:Interface Intel(R) 82574L Gigabit Network Connection(VLAN503): Network traffic
+3074:0 C:: Disk average queue length
+3075:1 E:: Disk average queue length
+3076:0 C:: Disk average waiting time
+3077:1 E:: Disk average waiting time
+3078:0 C:: Disk read/write rates
+3079:1 E:: Disk read/write rates
+3080:0 C:: Disk utilization and queue
+3081:1 E:: Disk utilization and queue
+3153:Interface Intel(R) 82574L Gigabit Network Connection #2(TEMP VLAN502): Network traffic
+3249:Interface Intel(R) 82574L Gigabit Network Connection #3(VLAN506): Network traffic
+
+I grafici interessanti per Windows possono essere questi:
+Windows: CPU utilization
+Windows: Memory utilization
+OS DISK(C:): Disk space usage
+Software Archive(E:): Disk space usage
+
+Quindi ricaviamo il graphid per ogni grafico che ci interessa:
+
+zgetgraph.py -s now-7d -t now -f ACIWINAUX1-3066.png 3066
+
+
+
+
