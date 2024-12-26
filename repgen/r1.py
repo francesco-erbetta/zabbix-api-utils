@@ -67,7 +67,7 @@ pdf.cell(text="Zabbix Weekly Report",
                 new_x="LMARGIN", new_y="NEXT", align='L')
 pdf.ln(5)
 pdf.set_font("Helvetica", size=24)
-pdf.cell(text="Customer: ARPA Lombardia",
+pdf.cell(text="Customer: ACME Inc.",
                 new_x="LMARGIN", new_y="NEXT", align='L')
 pdf.ln(5)
 pdf.set_font("Helvetica", size=16)
