@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 #
+# zabbix_utils is needed, see https://github.com/zabbix/python-zabbix-utils
 import argparse
 import configparser
 import os
@@ -44,6 +45,9 @@ To use this type of storage, create a conf file (the default is $HOME/.zabbix-ap
  password=verysecretpassword
  api=https://zabbix.mycompany.com/path/to/zabbix/frontend/
  no_verify=true
+
+Usage example:
+zhgraphfinder.py -e HOSTNAME
 
 """)
 parser.add_argument(

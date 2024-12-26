@@ -46,6 +46,9 @@ To use this type of storage, create a conf file (the default is $HOME/.zabbix-ap
  api=https://zabbix.mycompany.com/path/to/zabbix/frontend/
  no_verify=true
 
+Usage example:
+zthostfinder.py -n "Windows by Zabbix agent"
+
 """)
 parser.add_argument('template', help='Template to find linked hosts for')
 parser.add_argument('-u', '--username', help='User for the Zabbix api')
