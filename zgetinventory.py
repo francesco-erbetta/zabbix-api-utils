@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 #
-# import needed modules.
 # zabbix_utils is needed, see https://github.com/zabbix/python-zabbix-utils
 #
 import argparse
@@ -10,7 +9,6 @@ import os.path
 import sys
 import distutils.util
 import csv
-import codecs
 import io
 from zabbix_utils import ZabbixAPI
 
@@ -29,67 +27,6 @@ def ConfigSectionMap(section):
             dict1[option] = None
     return dict1
 
-class UTF8Recoder:
-    """
-    Iterator that reads an encoded stream and reencodes the input to UTF-8
-    """
-
-    def __init__(self, f, encoding):
-        self.reader = codecs.getreader(encoding)(f)
-
-    def __iter__(self):
-        return self
-
-    def __next__(self):
-        return self.reader.next().encode("utf-8")
-
-
-class UnicodeReader:
-    """
-    A CSV reader which will iterate over lines in the CSV file "f",
-    which is encoded in the given encoding.
-    """
-
-    def __init__(self, f, dialect=csv.excel, encoding="utf-8", **kwds):
-        f = UTF8Recoder(f, encoding)
-        self.reader = csv.reader(f, dialect=dialect, **kwds)
-
-    def __next__(self):
-        row = next(self.reader)
-        return [str(s, "utf-8") for s in row]
-
-    def __iter__(self):
-        return self
-
-
-class UnicodeWriter:
-    """
-    A CSV writer which will write rows to CSV file "f",
-    which is encoded in the given encoding.
-    """
-
-    def __init__(self, f, dialect=csv.excel, encoding="utf-8", **kwds):
-        # Redirect output to a queue
-        self.queue = io.StringIO()
-        self.writer = csv.writer(self.queue, dialect=dialect, **kwds)
-        self.stream = f
-        self.encoder = codecs.getincrementalencoder(encoding)()
-
-    def writerow(self, row):
-        self.writer.writerow([s.encode("utf-8") for s in row])
-        # Fetch UTF-8 output from the queue ...
-        data = self.queue.getvalue()
-        #data = data.decode("utf-8")
-        # ... and reencode it into the target encoding
-        # data = self.encoder.encode(data)
-        # write to the target stream
-        self.stream.write(data)
-        # empty queue
-        self.queue.truncate(0)
-
-    def writerows(self, rows):
-        for row in rows:
-            self.writerow(row)
 
 # set default vars
 defconf = os.getenv("HOME") + "/.zabbix-api.conf"
@@ -108,6 +45,10 @@ To use this type of storage, create a conf file (the default is $HOME/.zabbix-ap
  password=verysecretpassword
  api=https://zabbix.mycompany.com/path/to/zabbix/frontend/
  no_verify=true
+
+Usage example(s):
+Get some inventory fields in CSV for a specific host:
+zgetinventory.py -H MYHOST -F "os" "vendor" "contact"
 
 """)
 
@@ -324,8 +265,8 @@ if result:
         header.append(fieldname)
 
     # Output the result in CSV format
-    output = UnicodeWriter(sys.stdout, delimiter=',',
-                           quotechar='"', quoting=csv.QUOTE_ALL)
+    #output = UnicodeWriter(sys.stdout, delimiter=',',quotechar='"', quoting=csv.QUOTE_ALL)
+    output = csv.writer(sys.stdout,delimiter=',',quotechar='"', quoting=csv.QUOTE_ALL)
     output.writerow(header)
     for host in result:
         row = [host['hostid'], host['host']]
