@@ -53,6 +53,43 @@ class PDF(FPDF):
         # Printing page number:
         self.cell(0, 10, f"Page {self.page_no()}/{{nb}}", align="C")
 
+    def hostinfo_title(self, num, label):
+        # Setting font: helvetica 12
+        self.set_font("helvetica", size=12)
+        # Setting background color
+        self.set_fill_color(200, 220, 255)
+        # Printing chapter name:
+        self.cell(
+            0,
+            6,
+            f"Host {num} : {label}",
+            new_x="LMARGIN",
+            new_y="NEXT",
+            align="L",
+            fill=True,
+        )
+        # Performing a line break:
+        self.ln(4)
+
+    def hostinfo_body(self, filepath):
+        # Reading text file:
+        with open(filepath, "rb") as fh:
+            txt = fh.read().decode("latin-1")
+        # Setting font: Times 12
+        self.set_font("Times", size=12)
+        # Printing justified text:
+        self.multi_cell(0, 5, txt)
+        # Performing a line break:
+        self.ln()
+        # Final mention in italics:
+        # self.set_font(style="I")
+        # self.cell(0, 5, "(end of excerpt)")
+
+    def print_hostinfo(self, num, title, filepath):
+        self.add_page()
+        self.hostinfo_title(num, title)
+        self.hostinfo_body(filepath)
+
 # Initialize PDF object
 pdf = PDF(orientation="P", unit="mm", format="A4")
 pdf.set_auto_page_break(auto=True, margin=10)
@@ -76,15 +113,16 @@ pdf.cell(text="Date: 26/12/2024",
 
 # Iterate through hosts
 # Graph must be about 900x200, 3 graphs per page
+host_counter=1
 for host in sorted(os.listdir(base_dir)):
     host_dir = os.path.join(base_dir, host)
     if os.path.isdir(host_dir):
         # Add a new page for the host
-        pdf.add_page()
-        pdf.set_font("Helvetica", size=12)
-        pdf.cell(0, 0, text=f"Host: {host}",
-               new_x="LMARGIN", new_y="NEXT", align='L')
-
+        # pdf.add_page()
+        # pdf.set_font("Helvetica", size=12)
+        # pdf.cell(0, 0, text=f"Host: {host}",
+        #        new_x="LMARGIN", new_y="NEXT", align='L')
+        pdf.print_hostinfo(host_counter,host,"info.txt")
         # Add images for the host
         image_count = 0
         for image in sorted(os.listdir(host_dir)):
@@ -99,6 +137,7 @@ for host in sorted(os.listdir(base_dir)):
                 pdf.image(img_path, x=10, y=pdf.get_y() + 10, w=180)
                 pdf.ln(70)  # Adjust space after each image
                 image_count += 1
+    host_counter +=1
                 
 # Save PDF
 pdf.output(output_pdf)
