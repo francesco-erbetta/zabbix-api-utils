@@ -151,4 +151,5 @@ if group:
 else:
     sys.exit("Error: Could not find hostgroup \"" + group_name + "\"")
 
+zapi.logout()
 # And we're done...

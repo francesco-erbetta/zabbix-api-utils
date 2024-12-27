@@ -25,7 +25,6 @@ def ConfigSectionMap(section):
             dict1[option] = None
     return dict1
 
-
 # set default vars
 defconf = os.getenv("HOME") + "/.zabbix-api.conf"
 username = ""

@@ -1,11 +1,14 @@
 Logica di generazione:
 
 visto che i grafici sono specifici di un dato template, partiamo dalla
-lista del Templates:
+lista del Templates che coprono la maggior parte degli Hosts:
 
 "Windows by Zabbix agent"
 "Linux by Zabbix agent"
 
+Altre casistiche specifiche vanno trattate ad-hoc.
+
+Step 1:
 
 Troviamo la lista degli host per un dato template:
 zthostfinder.py "Windows by Zabbix agent"
@@ -15,6 +18,9 @@ ACIWDC2
 ACIWINAUX2
 ACIWCA1
 
+Step 2:
+
+Troviamo i grafici significativi per pattern e id:
 zhgraphfinder.py -e ACIWINAUX1
 3066:Windows: CPU jumps
 3067:Windows: CPU usage
@@ -43,7 +49,49 @@ Software Archive(E:): Disk space usage
 
 Quindi ricaviamo il graphid per ogni grafico che ci interessa:
 
-zgetgraph.py -s now-7d -t now -f ACIWINAUX1-3066.png 3066
+zgetgraph.py -s now-7d -t now -f graph-3066.png 3066
+
+La size da usare dovrebbe essere 900x200 in base ai test effettuati.
+
+Creiamo quindi la struttura dati con un folder per host che contiene i grafici:
+repdata/
+├── ACIWCA1
+│   ├── g1.png
+│   ├── g2.png
+│   ├── g3.png
+│   └── info.txt
+├── ACIWDC1
+│   ├── g1.png
+│   ├── g2.png
+│   ├── g3.png
+│   └── info.txt
+├── ACIWDC2
+│   ├── g1.png
+│   ├── g2.png
+│   ├── g3.png
+│   └── info.txt
+├── ACIWINAUX1
+│   ├── g1.png
+│   ├── g2.png
+│   ├── g3.png
+│   ├── g4.png
+│   └── info.txt
+└── ACIWINAUX2
+    ├── g1.png
+    ├── g2.png
+    ├── g3.png
+    └── info.txt
+
+info.txt: some useful infos for the host
+g1=CPU
+g2=RAM
+g3...gn=File system
+
+Valutare se aggiungere anche il grafico della NIC, ma bisogna gestire eventuali NIC multiple.
+
+In ogni pagina ci stanno leggibili 3 grafici.
+
+Il programma r1.py usa FPDF2 per generare il PDF in base al layout di cui sopra.
 
 
 
