@@ -55,36 +55,34 @@ class PDF(FPDF):
 
     def hostinfo_title(self, num, label):
         # Setting font: helvetica 12
-        self.set_font("helvetica", size=12)
+        self.set_font("helvetica", size=14)
         # Setting background color
         self.set_fill_color(200, 220, 255)
         # Printing chapter name:
         self.cell(
             0,
             6,
-            f"Host {num} : {label}",
+            f"{num}) Host: {label}",
             new_x="LMARGIN",
             new_y="NEXT",
             align="L",
             fill=True,
         )
         # Performing a line break:
-        self.ln(4)
+        self.ln(1)
 
     def hostinfo_body(self, filepath):
         # Reading text file:
         with open(filepath, "rb") as fh:
             txt = fh.read().decode("latin-1")
-        # Setting font: Times 12
-        self.set_font("Times", size=12)
+        # Setting font and size
+        self.set_font("helvetica", size=8)
         # Printing justified text:
-        self.multi_cell(0, 5, txt)
+        #self.multi_cell(0, 5, txt)
+        self.write_html(txt)
         # Performing a line break:
-        self.ln()
-        # Final mention in italics:
-        # self.set_font(style="I")
-        # self.cell(0, 5, "(end of excerpt)")
-
+        # self.ln(1)
+    
     def print_hostinfo(self, num, title, filepath):
         self.add_page()
         self.hostinfo_title(num, title)
@@ -116,13 +114,14 @@ pdf.cell(text="Date: 26/12/2024",
 host_counter=1
 for host in sorted(os.listdir(base_dir)):
     host_dir = os.path.join(base_dir, host)
+    host_infofile = os.path.join(host_dir, "info.txt")
     if os.path.isdir(host_dir):
         # Add a new page for the host
         # pdf.add_page()
         # pdf.set_font("Helvetica", size=12)
         # pdf.cell(0, 0, text=f"Host: {host}",
         #        new_x="LMARGIN", new_y="NEXT", align='L')
-        pdf.print_hostinfo(host_counter,host,"info.txt")
+        pdf.print_hostinfo(host_counter,host, host_infofile)
         # Add images for the host
         image_count = 0
         for image in sorted(os.listdir(host_dir)):
