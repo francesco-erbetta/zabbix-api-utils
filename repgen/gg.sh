@@ -26,6 +26,9 @@ generate_infofile() {
   sysuname_key=$(../zhitemfinder.py -n -k system.uname $h)
   sysdescr=$(../zgethistory.py --count 1 -t 86400 $sysuname_key)
   printf "System description: <b>%s</b><br>\n" "$sysdescr" >$info_file
+  # Get zabbix interfaces
+  interfaces=$(../zhinterface.py $h | paste -s -d, )
+  printf "Zabbix interface(s): <b>%s</b><br>\n" "$interfaces" >>$info_file
   # List of templates
   linked_templates=$(../zhtmplfinder.py $h | paste -s -d, )
   printf "Linked Templates: <b>%s</b><br>\n" "$linked_templates" >>$info_file

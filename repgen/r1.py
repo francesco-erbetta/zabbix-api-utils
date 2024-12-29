@@ -105,8 +105,8 @@ pdf.set_font("Helvetica", size=24)
 pdf.cell(text="Customer: ACME Inc.",
                 new_x="LMARGIN", new_y="NEXT", align='L')
 pdf.ln(5)
-pdf.set_font("Helvetica", size=16)
-pdf.cell(text="Date: 26/12/2024",
+pdf.set_font("Helvetica", size=14)
+pdf.cell(text="Period: from 22/12/2024 to 29/12/2024",
                 new_x="LMARGIN", new_y="NEXT", align='L')
 
 # Iterate through hosts
