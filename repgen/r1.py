@@ -1,18 +1,18 @@
 #!/usr/bin/env python3
-
+#
 # Zabbix Hosts Report Generator
-
+# Luca Maranzano <liuk@linux.it> - 2024
+#
 # Requires python3-fpdf https://pypi.org/project/fpdf2/
 # fpdf2 tutorial: https://py-pdf.github.io/fpdf2/Tutorial.html
 # ubuntu way: apt install python3-fpdf (dont use pip if you can)
 
 import os
+from fpdf import FPDF
 
 # Set paths
 base_dir = "repdata"
 output_pdf = "report.pdf"
-
-from fpdf import FPDF
 
 class PDF(FPDF):
     def header(self):
@@ -25,7 +25,7 @@ class PDF(FPDF):
         self.set_x((210 - width) / 2)
         # Setting colors for frame, background and text:
         self.set_draw_color(0, 80, 180)
-        self.set_fill_color(173, 216, 230)
+        self.set_fill_color(200, 220, 255)
         self.set_text_color(220, 50, 50)
         # Setting thickness of the frame (1 mm)
         self.set_line_width(1)
@@ -41,7 +41,7 @@ class PDF(FPDF):
             fill=True,
         )
         # Performing a line break:
-        self.ln(10)
+        self.ln(5)
 
     def footer(self):
         # Position cursor at 1.5 cm from bottom:
