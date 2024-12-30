@@ -8,6 +8,7 @@
 # ubuntu way: apt install python3-fpdf (dont use pip if you can)
 
 import os
+import argparse
 from fpdf import FPDF
 
 # Set paths
@@ -88,25 +89,42 @@ class PDF(FPDF):
         self.hostinfo_title(num, title)
         self.hostinfo_body(filepath)
 
+# Define commandline arguments
+parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter, description='Generate PDF from repdata', epilog="""
+
+Usage example:
+r1.py "This is my title" "ACME inc" "Last 7 days since today"
+
+""")
+parser.add_argument('pdf_title', help='Title string used in header and cover')
+parser.add_argument('customer_name', help='Customer name displayed in the cover')
+parser.add_argument('time_frame', help='String used in cover about time frame covered by the report')
+args = parser.parse_args()
+
+mytitle = args.pdf_title
+mycustomer = args.customer_name
+mytimeframe = args.time_frame
+
 # Initialize PDF object
 pdf = PDF(orientation="P", unit="mm", format="A4")
 pdf.set_auto_page_break(auto=True, margin=10)
-pdf.set_title("Zabbix Weekly Report")
+# pdf.set_title("Zabbix Weekly Report")
+pdf.set_title(mytitle)
 pdf.set_author("BVTECH SpA")
 
 # Insert Cover page
 pdf.add_page()
 pdf.set_y(100)
 pdf.set_font("Helvetica", size=32)
-pdf.cell(text="Zabbix Weekly Report",
+pdf.cell(text=mytitle,
                 new_x="LMARGIN", new_y="NEXT", align='L')
 pdf.ln(5)
 pdf.set_font("Helvetica", size=24)
-pdf.cell(text="Customer: ACME Inc.",
+pdf.cell(text="Customer: " + mycustomer,
                 new_x="LMARGIN", new_y="NEXT", align='L')
 pdf.ln(5)
 pdf.set_font("Helvetica", size=14)
-pdf.cell(text="Period: from 22/12/2024 to 29/12/2024",
+pdf.cell(text="Time frame: " + mytimeframe,
                 new_x="LMARGIN", new_y="NEXT", align='L')
 
 # Iterate through hosts
