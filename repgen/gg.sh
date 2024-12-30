@@ -4,14 +4,14 @@
 # Luca Maranzano <liuk@linux.it> - 2024
 #
 # This program should be rewritten in python for better performance.
-set -x
+# set -x
 
 usage() {
     echo "Generate zabbix graphs via zapi utils."
     echo "Usage: $0 [ -s starttime ] [ -t endtime ]"
     echo "Default values: starttime=now-7d, endtime=now"
     echo ""
-    echo "Example: $0 -s now-7d -t now"
+    echo "Example: $0 -s now-10d -t now"
     exit 1
 }
 
@@ -21,10 +21,7 @@ LONGOPTS="starttime:,endtime:"
 
 # Analizza gli argomenti usando getopt
 PARSED=$(getopt --options=$OPTIONS --longoptions=$LONGOPTS --name "$0" -- "$@")
-if [[ $? -ne 0 ]]; then
-    echo "Getopt failed"
-    exit 1
-fi
+if [[ $? -ne 0 ]]; then usage; fi
 
 # Riorganizza gli argomenti secondo l'output di getopt
 eval set -- "$PARSED"
