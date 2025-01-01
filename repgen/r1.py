@@ -5,7 +5,6 @@
 #
 # Requires python3-fpdf https://pypi.org/project/fpdf2/
 # fpdf2 tutorial: https://py-pdf.github.io/fpdf2/Tutorial.html
-# ubuntu way: apt install python3-fpdf (dont use pip if you can)
 
 import os
 import argparse
