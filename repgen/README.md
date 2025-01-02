@@ -44,10 +44,12 @@ $ zhgraphfinder.py -e WINHOST02
 ```
 
 Interesting graphs to include in the report can be the following:
+```
 3068:Windows: CPU utilization
 3069:Windows: Memory utilization
 3071:OS DISK(C:): Disk space usage
 3072:Software Archive(E:): Disk space usage
+```
 
 With the "Disk space usage" there is a problem (at least for me): by default it's a Pie graph which will not show
 the time trend. So my solution is the following:
