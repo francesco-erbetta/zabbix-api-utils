@@ -3,7 +3,7 @@
 Using the zapi utilities we can try to build a Report Generator for a selection 
 of hosts monitored by your Zabbix instance.
 
-In this directory you'll find a sort of POC about what I mean.
+In this directory you'll find a working POC about what I mean, using bash and python3.
 
 ## High level logic
 For a given host in Zabbix, the graphs you may be interested in fundamentally depend on the Template associated with the host itself, for example:
