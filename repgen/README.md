@@ -1,4 +1,4 @@
-# Zabbix Hosts Report generator POC
+# Zabbix Hosts PDF Report generator POC
 
 Using the zapi utilities we can try to build a Report Generator for a selection 
 of hosts monitored by your Zabbix instance.
@@ -6,12 +6,12 @@ of hosts monitored by your Zabbix instance.
 In this directory you'll find a sort of POC about what I mean.
 
 ## High level logic
-For a given host on Zabbix, the graphs you may be interested in fundamentally depend on the Template associated with the host itself, for example:
+For a given host in Zabbix, the graphs you may be interested in fundamentally depend on the Template associated with the host itself, for example:
 
 - "Windows by Zabbix agent"
 - "Linux by Zabbix agent"
 
-So we'll start from some common templates to get the list of the associated hosts:
+So we'll start from these templates to get the list of the linked hosts that will be included in the report:
 
 ```
 $ zthostfinder.py "Windows by Zabbix agent"
@@ -53,8 +53,8 @@ Interesting graphs to include in the report can be the following:
 
 With the "Disk space usage" there is a problem (at least for me): by default it's a Pie graph which will not show
 the time trend. So my solution is the following:
-1. Go to the Template definition -> Discover Rules
-2. Click on the "Graph prototypes" where the current Pie graph get defined
+1. Go to the Template definition -> Discovery Rules
+2. Click on the "Graph prototypes" where the current Pie graph gets defined
 3. Clone the current Pie graph changing the following:
     - The name of the graph should contain a UNIQUE pattern added to the default name (eg. MYREP)
     - The Graph type will be "Normal"
@@ -72,7 +72,7 @@ $ zhgraphfinder.py -e WINHOST02 | grep "Disk space usage"
 4094:Software Archive(E:): Disk space usage (MYREP)
 ```
 
-Let's generate the graph in PNG format:
+Let's try generate the graph in PNG format:
 
 ```
 $ zgetgraph.py -s now-7d -t now -f mygraph.png 4093
@@ -85,9 +85,9 @@ With some more zapi magic invocation we can get some info about the hosts, like 
 ## A bit of python with a bit of bash and the POC is here
 In this folder you'll find 2 programs that will do the work:
 1. gg.sh: Graph Generator bash script
-2. r1.py: PDF generator in python using FPDF2 module
+2. r1.py: PDF generator in python using the excellent [FPDF2](https://pypi.org/project/fpdf2/) module
 
-### Graph generator
+### Graph generator (gg.sh)
 This bash script will cycle through all the ENABLED hosts associated to the Windows and Linux Templates and will dump for every host the graphs about CPU, Memory and every discovered Disk/Filesystem, producing a tree like this starting from REPDATA=./repdata:
 ```
 repdata/
@@ -106,11 +106,14 @@ repdata/
 .....
 ```
 
-### PDF Generator
-This Python script will cycle in the repdata folder and will generate a PDF with these simple rules:
-1. A Cover page with a Title, the Customer name and the period (last 7 days for example)
-2. For every Host found it will produce an Header with some infos from inventory and host items, and 3 Graphs per page. Host with several file systems will generate lot of pages :-)
-3. Outpuf file will be report.pdf
+NOTE about file names: g001.png for CPU, g002.png for Memory, g003.png and so on for every Disk/File system.
+
+### PDF Generator (r1.py)
+The Python script r1.py will cycle in the repdata/ folder and will generate a PDF with these simple rules:
+1. A small logo in the upper left corner in every page
+2. A Cover page with a Title, the Customer name and the period (last 7 days for example)
+3. For every Host found it will produce an Header with some infos from inventory and host items, and 3 Graphs per page. Host with several file systems will generate lot of pages :-)
+4. Outpuf file will be report.pdf
 
 Please do note that PDF can be huge with several hosts (about 12MB for 200 Windows Hosts with few disk each, for example).
 
