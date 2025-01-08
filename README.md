@@ -10,6 +10,8 @@ A collection of various scripts to automate tasks with the Zabbix API. The main 
 
 All of these tools can be invoked with `-h/--help` to get help.
 
+Tested with Zabbix version 6.0, 6.4 on Ubuntu 20.04, 22.04 and 24.04.
+
 ## CAVEAT EMPTOR
 Not all the utilities have been ported, it's a matter of time, thank you for your patience.
 
