@@ -10,7 +10,7 @@ pip install -r $WORKDIR/requirements.txt
 echo -n "Inserisci nome cliente: "
 read cliente
 sed -i "s/ACME Corporation/$cliente/g" $WORKDIR/repgen/gg.sh
-sed -i "s/[cliente]/$cliente/g" $WORKDIR/repgen/sendmail.sh
+sed -i "s/\[cliente\]/$cliente/g" $WORKDIR/repgen/sendmail.sh
 
 echo -n "Inserisci lo username dell'utente zabbix: "
 read zusr
@@ -26,7 +26,7 @@ read mailcliente
 sed -i "/^TO=/s/\".*\"/\"$mailcliente\"/" $WORKDIR/repgen/sendmail.sh
 echo -n "Inserisci la frase di congedo: "
 read endsentence
-sed -i "s/[placeholder]/$endsentence/g" $WORKDIR/repgen/sendmail.sh
+sed -i "s/\[placeholder\]/$endsentence/g" $WORKDIR/repgen/sendmail.sh
 
 echo "[Zabbix API] 
 username=$zusr 
