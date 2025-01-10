@@ -18,10 +18,13 @@ echo -n "Inserisci la password dell'utente zabbix: "
 read zpwd
 echo -n "Inserisci la url del frontend zabbix (es. https://zabbix.cliente.local/zabbix/): "
 read zurl
-echo -n "Inserisci una o più mail (separate da virgola) alle quali si intende inviare il report"
+echo -n "Inserisci mail mittente per l'invio del report: "
+read mittente
+sed -i "/^FROM=/s/\".*\"/\"$mittente\"/" $WORKDIR/repgen/sendmail.sh
+echo -n "Inserisci una o più mail (separate da virgola) alle quali si intende inviare il report: "
 read mailcliente
-sed -i "/^FROM=/s/\".*\"/\"$mailcliente\"/" $WORKDIR/repgen/sendmail.sh
-echo -n "Inserisci la frase di congedo"
+sed -i "/^TO=/s/\".*\"/\"$mailcliente\"/" $WORKDIR/repgen/sendmail.sh
+echo -n "Inserisci la frase di congedo: "
 read endsentence
 sed -i "s/[placeholder]/$endsentence/g" $WORKDIR/repgen/sendmail.sh
 
