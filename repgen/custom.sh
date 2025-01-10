@@ -40,12 +40,12 @@ while true; do
     if [[ "$choice" == "1" ]]; then
         sed -i 's/Last month/Last 7 days/g' $WORKDIR/repgen/gg.sh
 	sed -i "/^SUBJECT=/s/\".*\"/Report settimanale performances infrastruttura $cliente/" $WORKDIR/repgen/sendmail.sh
-        echo "0 8 * * 1 source $WORKDIR/zabbix-reports-venv/bin/activate; $WORKDIR/repgen/gg.sh -s now-1w -t now; $WORKDIR/sendmail.sh" | crontab -
+        echo "0 8 * * 1 source $WORKDIR/zabbix-reports-venv/bin/activate; $WORKDIR/repgen/gg.sh -s now-1w -t now; $WORKDIR/repgen/sendmail.sh" | crontab -
         break
     elif [[ "$choice" == "2" ]]; then
 	sed -i "/^SUBJECT=/s/\".*\"/Report mensile performances infrastruttura $cliente/" $WORKDIR/repgen/sendmail.sh
         sed -i 's/Last 7 days/Last month/g' $WORKDIR/repgen/gg.sh
-        echo "0 0 1 * * source $WORKDIR/zabbix-reports-venv/bin/activate; $WORKDIR/repgen/gg.sh -s now-1M -t now; $WORKDIR/sendmail.sh" | crontab -
+        echo "0 0 1 * * source $WORKDIR/zabbix-reports-venv/bin/activate; $WORKDIR/repgen/gg.sh -s now-1M -t now; $WORKDIR/repgen/sendmail.sh" | crontab -
         break
     else
         echo "Input invalido. Inserisci 1 o 2."
