@@ -1,9 +1,9 @@
 #!/bin/bash
-
+WORKDIR="/home/zabbix-reports/zabbix-api-utils/"
 FROM=""
 TO=""
 CC=""
-SUBJECT="Report settimanale performances infrastruttura [cliente] $(date +"%d-%m-%Y")"
+SUBJECT="Report [cadenza] performances infrastruttura [cliente] $(date +"%d-%m-%Y")"
 BODY="
  <html>
  <body>
