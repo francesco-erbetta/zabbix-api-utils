@@ -12,6 +12,7 @@ from fpdf import FPDF
 from datetime import datetime
 
 # Set paths
+os.chdir('/home/zabbix-reports/zabbix-api-utils/repgen')
 base_dir = "repdata"
 output_pdf = "report" + datetime.now().strftime("%Y%m%d") + ".pdf"
 class PDF(FPDF):
