@@ -23,7 +23,9 @@ echo -n "Inserisci la frase di congedo"
 read endsentence
 sed -i "s/[placeholder]/$endsentence/g" $WORKDIR/repgen/gg.sh
 
-echo "[Zabbix API] username=$zusr password=$zpwd
+echo "[Zabbix API] 
+username=$zusr 
+password=$zpwd
 api=$zurl
 no_verify=true" > /home/zabbix-reports/.zabbix-api.conf
 
