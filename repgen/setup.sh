@@ -33,4 +33,4 @@ echo -n "Scegli una password per l'utente zabbix-reports
 passwd zabbix-reports
 cp -r ../../zabbix-api-utils /home/zabbix-reports
 chown -R zabbix-reports:zabbix-reports /home/zabbix-reports/zabbix-api-utils
-su zabbix-reports /home/zabbix-reports/zabbix-api-utils/custom.sh
+su zabbix-reports /home/zabbix-reports/zabbix-api-utils/repgen/custom.sh
