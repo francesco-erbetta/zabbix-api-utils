@@ -132,6 +132,9 @@ host_counter=1
 for host in sorted(os.listdir(base_dir)):
     host_dir = os.path.join(base_dir, host)
     host_infofile = os.path.join(host_dir, "info.txt")
+    if not os.path.exists(host_infofile):
+        print(f"info.txt not found for host {host}. Skipping...")
+        continue
     if os.path.isdir(host_dir):
         # Add a new page for the host
         # pdf.add_page()
