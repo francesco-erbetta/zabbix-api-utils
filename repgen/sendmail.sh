@@ -1,5 +1,5 @@
 #!/bin/bash
-WORKDIR="/home/zabbix-reports/zabbix-api-utils/"
+WORKDIR="/home/zabbix-reports/zabbix-api-utils/repgen"
 FROM=""
 TO=""
 CC=""
@@ -16,8 +16,8 @@ BODY="
  <i>Questa è una mail automatica, si prega di non rispondere, per ogni esigenza [placeholder]</i></p>
  </body>
  </html>"
-
- ATTACHMENT="./report$(date +%Y%m%d).pdf"
+IMAGE_PATH="$WORKDIR/Logo_firma_BV.png"
+ATTACHMENT="$WORKDIR/report$(date +%Y%m%d).pdf"
 
 if [ $? -eq 0 ]; then
   {
