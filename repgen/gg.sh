@@ -179,26 +179,26 @@ tstamp=$(date +%Y-%m-%d-H%H%M)
 ./r1.py "Infrastructure report by Zabbix" "ACME Corporation" "Last 7 days from $tstamp"
 
 #Generazione testo mail
-if [[ $2 == now-1M ]] ; then
-	sdate=$(date --date="-1 month" +"%d/%m/%Y")
-	edate=$(date +"%d/%m/%Y")
-	echo "Buongiorno,
-in allegato il report mensile di performances dell'infrastruttura per il periodo $sdate - $edate. 
- 
-Cordiali saluti
-Bvtech
- 
-Questa è una mail automatica, si prega di non rispondere, per ogni esigenza [placeholder]" > ./mailtext.txt
-elif [[ $2 == now-1w ]] ; then
-	sdate=$(date --date="-1 week" +"%d/%m/%Y")
-	edate=$(date +"%d/%m/%Y")
-	echo "Buongiorno,
-in allegato il report settimanale di performances dell'infrastruttura per il periodo $sdate - $edate. 
- 
-Cordiali saluti
-Bvtech
- 
-Questa è una mail automatica, si prega di non rispondere, per ogni esigenza [placeholder]" > ./mailtext.txt
-fi
+#if [[ $2 == now-1M ]] ; then
+#	sdate=$(date --date="-1 month" +"%d/%m/%Y")
+#	edate=$(date +"%d/%m/%Y")
+#	echo "Buongiorno,
+#in allegato il report mensile di performances dell'infrastruttura per il periodo $sdate - $edate. 
+# 
+#Cordiali saluti
+#Bvtech
+# 
+#Questa è una mail automatica, si prega di non rispondere, per ogni esigenza [placeholder]" > ./mailtext.txt
+#elif [[ $2 == now-1w ]] ; then
+#	sdate=$(date --date="-1 week" +"%d/%m/%Y")
+#	edate=$(date +"%d/%m/%Y")
+#	echo "Buongiorno,
+#in allegato il report settimanale di performances dell'infrastruttura per il periodo $sdate - $edate. 
+# 
+#Cordiali saluti
+#Bvtech
+# 
+#Questa è una mail automatica, si prega di non rispondere, per ogni esigenza [placeholder]" > ./mailtext.txt
+#fi
 exit 0
 

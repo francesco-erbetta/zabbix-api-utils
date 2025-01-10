@@ -15,12 +15,12 @@ DISTRO=$(get_distro)
 #Installa le dipendenze usando il package manager appropriato
 if [ "$DISTRO" == "ubuntu" ] || [ "$DISTRO" == "debian" ]; then
   apt update
-  apt install -y git python3 python3-pip python3-venv mailutils
+  apt install -y python3 python3-pip python3-venv sendmail
 elif [ "$DISTRO" == "centos" ] || [ "$DISTRO" == "rhel" ] || [ "$DISTRO" == "almalinux" ] || [ "$DISTRO" == "rocky" ]; then
-  yum install -y git python3 python3-pip python3-venv mailutils
+  yum install -y python3 python3-pip python3-venv sendmail
 elif [ "$DISTRO" == "sles" ] || [ "$DISTRO" == "opensuse" ]; then
   zypper refresh
-  zypper install -y git python3 python3-pip python3-venv mailutils
+  zypper install -y python3 python3-pip python3-venv sendmail
 else
   echo "Distro non riconosciuta, intervento manuale richiesto"
   exit 1

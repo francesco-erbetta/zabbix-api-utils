@@ -9,11 +9,11 @@
 import os
 import argparse
 from fpdf import FPDF
+from datetime import datetime
 
 # Set paths
 base_dir = "repdata"
-output_pdf = "report.pdf"
-
+output_pdf = "report" + datetime.now().strftime("%Y%m%d") + ".pdf"
 class PDF(FPDF):
     def header(self):
         # Rendering logo:
