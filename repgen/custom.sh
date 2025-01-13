@@ -23,7 +23,9 @@ read -e mittente
 sed -i "/^FROM=/s/\".*\"/\"$mittente\"/" $WORKDIR/repgen/sendmail.sh
 echo -n "Inserisci una o più mail (separate da virgola) alle quali si intende inviare il report: "
 read -e mailcliente
-sed -i "/^TO=/s/\".*\"/\"$mailcliente\"/" $WORKDIR/repgen/sendmail.sh
+echo -n "Inserisci una o più mail (separate da virgola) da mettere in copia: "
+read -e mailcopia
+sed -i "/^CC=/s/\".*\"/\"$mailcopia\"/" $WORKDIR/repgen/sendmail.sh
 echo -n "Inserisci la frase di congedo: "
 read -e endsentence
 sed -i "s/\[placeholder\]/$endsentence/g" $WORKDIR/repgen/sendmail.sh
