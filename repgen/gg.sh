@@ -176,7 +176,7 @@ done
 unset IFS
 
 tstamp=$(date +%Y-%m-%d-H%H%M)
-./r1.py "Infrastructure report by Zabbix" "ACME Corporation" "Last 7 days from $tstamp"
+/home/zabbix-reports/r1.py "Infrastructure report by Zabbix" "ACME Corporation" "Last 7 days from $tstamp"
 
 #Generazione testo mail
 #if [[ $2 == now-1M ]] ; then
