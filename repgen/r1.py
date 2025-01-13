@@ -8,6 +8,7 @@
 
 import os
 import argparse
+import zipfile
 from fpdf import FPDF
 from datetime import datetime
 
@@ -162,5 +163,23 @@ for host in sorted(os.listdir(base_dir)):
 # Save PDF
 pdf.output(output_pdf)
 print(f"Report generated: {output_pdf}")
+
+# Compress PDF
+def compress_file(input_file, output_zip):
+    """
+    Compress a file with the best compression possible using zipfile.
+
+    :param input_file: The file to compress.
+    :param output_zip: The name of the resulting zip file.
+    """
+    try:
+        with zipfile.ZipFile(output_zip, 'w', compression=zipfile.ZIP_DEFLATED, compresslevel=9) as zipf:
+            zipf.write(input_file, arcname=input_file.split('/')[-1])
+        print(f"File '{input_file}' successfully compressed to '{output_zip}' with best compression.")
+    except Exception as e:
+        print(f"An error occurred: {e}")
+output_zip = f"{output_pdf.split('.')[0]}.zip"
+# Example usage
+compress_file(output_pdf, output_zip)
 
 # Enjoy your report!

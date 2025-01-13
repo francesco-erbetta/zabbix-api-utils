@@ -8,7 +8,7 @@ BODY="
  <html>
  <body>
  <p>Buongiorno,</br></br>
- in allegato il report settimanale di performances dell'infrastruttura [cliente].</br></br>
+ in allegato il report [cadenza] di performances dell'infrastruttura [cliente].</br></br>
  Cordiali saluti,</br>
  BV-Tech</br></br>
  <img src="cid:myimage" /></br></br>
@@ -17,7 +17,7 @@ BODY="
  </body>
  </html>"
 IMAGE_PATH="$WORKDIR/Logo_firma_BV.png"
-ATTACHMENT="$WORKDIR/report$(date +%Y%m%d).pdf"
+ATTACHMENT="$WORKDIR/report$(date +%Y%m%d).zip"
 
 if [ $? -eq 0 ]; then
   {
