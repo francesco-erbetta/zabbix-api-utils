@@ -181,13 +181,13 @@ elif [[ $starttime == "now-1w" ]] ; then
 	sdate=$(date --date="-1 week" +"%d/%m/%Y")
 elif [[ $starttime != "now-1w" && $starttime != "now-1M" ]] ; then
 	if [[ ${starttime: -1} == "w" ]] ; then
-		$sdnum=$(grep -o '[0-9]\+' $starttime)
+		sdnum=$(grep -o '[0-9]\+' $starttime)
 		sdate=$(date --date="-$sdnum week" +"%d/%m/%Y")
 	elif [[ ${starttime: -1} == "M" ]] ; then
-		$sdnum=$(grep -o '[0-9]\+' $starttime)
+		sdnum=$(grep -o '[0-9]\+' $starttime)
 		sdate=$(date --date="-$sdnum month" +"%d/%m/%Y")
 	elif [[ ${starttime: -1} == "d" ]] ; then
-		$sdnum=$(grep -o '[0-9]\+' $starttime)
+		sdnum=$(grep -o '[0-9]\+' $starttime)
 		sdate=$(date --date="-$sdnum day" +"%d/%m/%Y")
 	fi
 fi
@@ -197,13 +197,13 @@ if [[ $endtime == "now" ]] ; then
 	edate=$(date +"%d/%m/%Y")
 else 
 	if [[ ${endtime: -1} == "w" ]] ; then
-		$ednum=$(grep -o '[0-9]\+' $endtime)
+		ednum=$(grep -o '[0-9]\+' $endtime)
 		edate=$(date --date="-$ednum week" +"%d/%m/%Y")
 	elif [[ ${endtime: -1} == "M" ]] ; then
-		$ednum=$(grep -o '[0-9]\+' $endtime)
+		ednum=$(grep -o '[0-9]\+' $endtime)
 		edate=$(date --date="-$ednum month" +"%d/%m/%Y")
 	elif [[ ${endtime: -1} == "d" ]] ; then
-		$ednum=$(grep -o '[0-9]\+' $endtime)
+		ednum=$(grep -o '[0-9]\+' $endtime)
 		edate=$(date --date="-$ednum day" +"%d/%m/%Y")
 	fi
 fi
