@@ -175,35 +175,35 @@ done
 
 unset IFS
 
-if [[ $2 == "now-1M" ]] ; then
+if [[ $starttime == "now-1M" ]] ; then
 	sdate=$(date --date="-1 month" +"%d/%m/%Y")
-elif [[ $2 == "now-1w" ]] ; then
+elif [[ $starttime == "now-1w" ]] ; then
 	sdate=$(date --date="-1 week" +"%d/%m/%Y")
-elif [[ $2 != "now-1w" && $2 != "now-1M" ]] ; then
-	if [[ ${2: -1} == "w" ]] ; then
-		$sdnum=$(grep -o '[0-9]\+' $2)
+elif [[ $starttime != "now-1w" && $starttime != "now-1M" ]] ; then
+	if [[ ${starttime: -1} == "w" ]] ; then
+		$sdnum=$(grep -o '[0-9]\+' $starttime)
 		sdate=$(date --date="-$sdnum week" +"%d/%m/%Y")
-	elif [[ ${2: -1} == "M" ]] ; then
-		$sdnum=$(grep -o '[0-9]\+' $2)
+	elif [[ ${starttime: -1} == "M" ]] ; then
+		$sdnum=$(grep -o '[0-9]\+' $starttime)
 		sdate=$(date --date="-$sdnum month" +"%d/%m/%Y")
-	elif [[ ${2: -1} == "d" ]] ; then
-		$sdnum=$(grep -o '[0-9]\+' $2)
+	elif [[ ${starttime: -1} == "d" ]] ; then
+		$sdnum=$(grep -o '[0-9]\+' $starttime)
 		sdate=$(date --date="-$sdnum day" +"%d/%m/%Y")
 	fi
 fi
 
 
-if [[ $4 == "now" ]] ; then
+if [[ $endtime == "now" ]] ; then
 	edate=$(date +"%d/%m/%Y")
 else 
-	if [[ ${4: -1} == "w" ]] ; then
-		$ednum=$(grep -o '[0-9]\+' $4)
+	if [[ ${endtime: -1} == "w" ]] ; then
+		$ednum=$(grep -o '[0-9]\+' $endtime)
 		edate=$(date --date="-$ednum week" +"%d/%m/%Y")
-	elif [[ ${4: -1} == "M" ]] ; then
-		$ednum=$(grep -o '[0-9]\+' $4)
+	elif [[ ${endtime: -1} == "M" ]] ; then
+		$ednum=$(grep -o '[0-9]\+' $endtime)
 		edate=$(date --date="-$ednum month" +"%d/%m/%Y")
-	elif [[ ${4: -1} == "d" ]] ; then
-		$ednum=$(grep -o '[0-9]\+' $4)
+	elif [[ ${endtime: -1} == "d" ]] ; then
+		$ednum=$(grep -o '[0-9]\+' $endtime)
 		edate=$(date --date="-$ednum day" +"%d/%m/%Y")
 	fi
 fi
