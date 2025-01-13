@@ -178,9 +178,9 @@ if item:
             for record in itemhist:
                 print((format(record["value"])))
     else:
-        sys.exit("Error: No values returned for itemid " + itemid)
+        print("No values returned for itemid " + itemid)
 else:
-    sys.exit("Error: Could not find itemid " + itemid)
+        print("Could not find itemid " + itemid)
 
 zapi.logout()
 # And we're done...
