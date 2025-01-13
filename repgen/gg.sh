@@ -177,7 +177,7 @@ unset IFS
 
 if [[ $2 == "now-1M" ]] ; then
 	sdate=$(date --date="-1 month" +"%d/%m/%Y")
-elif [[ $2 == "now-1w"]] ; then
+elif [[ $2 == "now-1w" ]] ; then
 	sdate=$(date --date="-1 week" +"%d/%m/%Y")
 elif [[ $2 != "now-1w" && $2 != "now-1M" ]] ; then
 	if [[ ${2: -1} == "w" ]] ; then
