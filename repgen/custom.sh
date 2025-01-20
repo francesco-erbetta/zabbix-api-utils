@@ -8,20 +8,30 @@ pip install -r $WORKDIR/requirements.txt
 
 #Customizzazione cliente
 echo -n "Inserisci nome cliente: "
-read cliente
+read -e cliente
 sed -i "s/ACME Corporation/$cliente/g" $WORKDIR/repgen/gg.sh
+sed -i "s/\[cliente\]/$cliente/g" $WORKDIR/repgen/sendmail.sh
 
 echo -n "Inserisci lo username dell'utente zabbix: "
-read zusr
+read -e zusr
 echo -n "Inserisci la password dell'utente zabbix: "
-read zpwd
+read -e zpwd
 echo -n "Inserisci la url del frontend zabbix (es. https://zabbix.cliente.local/zabbix/): "
-read zurl
-echo -n "Inserisci la mail alla quale si intende inviare il report"
-read mailcliente
+read -e zurl
+echo -n "Inserisci mail mittente per l'invio del report: "
+read -e mittente
+sed -i "/^FROM=/s/\".*\"/\"$mittente\"/" $WORKDIR/repgen/sendmail.sh
+echo -n "Inserisci una o più mail (separate da virgola) alle quali si intende inviare il report: "
+read -e mailcliente
+echo -n "Inserisci una o più mail (separate da virgola) da mettere in copia: "
+read -e mailcopia
+sed -i "/^CC=/s/\".*\"/\"$mailcopia\"/" $WORKDIR/repgen/sendmail.sh
+echo -n "Inserisci la frase di congedo: "
+read -e endsentence
+sed -i "s/\[placeholder\]/$endsentence/g" $WORKDIR/repgen/sendmail.sh
 
-echo "[Zabbix API]
-username=$zusr
+echo "[Zabbix API] 
+username=$zusr 
 password=$zpwd
 api=$zurl
 no_verify=true" > /home/zabbix-reports/.zabbix-api.conf
@@ -33,11 +43,12 @@ while true; do
     read -p "Inserisci 1 o 2: " choice
 
     if [[ "$choice" == "1" ]]; then
-        echo "0 8 * * 1 $WORKDIR/repgen/gg.sh -s now-7d -t now && echo "Testo mail" | mail -s "Report settimanale $cliente" -a $WORKDIR/repgen/report.pdf $mailcliente" | crontab -
+	sed -i "s/\[cadenza\]/settimanale/g" $WORKDIR/repgen/sendmail.sh
+        echo "0 8 * * 1 source $WORKDIR/zabbix-reports-venv/bin/activate; $WORKDIR/repgen/gg.sh -s now-1w -t now; $WORKDIR/repgen/sendmail.sh" | crontab -
         break
     elif [[ "$choice" == "2" ]]; then
-        sed -i 's/Last 7 days/Last 30 days/g' $WORKDIR/repgen/gg.sh
-        echo "0 0 1 * * $WORKDIR/repgen/gg.sh -s now-30d -t now && echo "Testo mail" | mail -s "Report mensile $cliente" -a $WORKDIR/repgen/report.pdf $mailcliente" | crontab -
+	sed -i "s/\[cadenza\]/mensile/g" $WORKDIR/repgen/sendmail.sh
+        echo "0 0 1 * * source $WORKDIR/zabbix-reports-venv/bin/activate; $WORKDIR/repgen/gg.sh -s now-1M -t now; $WORKDIR/repgen/sendmail.sh" | crontab -
         break
     else
         echo "Input invalido. Inserisci 1 o 2."

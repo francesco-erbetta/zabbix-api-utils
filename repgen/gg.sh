@@ -175,10 +175,42 @@ done
 
 unset IFS
 
-tstamp=$(date +%Y-%m-%d-H%H%M)
-./r1.py "Infrastructure report by Zabbix" "ACME Corporation" "Last 7 days from $tstamp"
 
-okular report.pdf &
+if [[ $starttime == "now-1M" ]] ; then
+        sdate=$(date --date="-1 month" +"%d/%m/%Y")
+elif [[ $starttime == "now-1w" ]] ; then
+        sdate=$(date --date="-1 week" +"%d/%m/%Y")
+elif [[ $starttime != "now-1w" && $starttime != "now-1M" ]] ; then
+        if [[ ${starttime: -1} == "w" ]] ; then
+                sdnum=$(echo $starttime | grep -o '[0-9]\+')
+                sdate=$(date --date="-$sdnum week" +"%d/%m/%Y")
+        elif [[ ${starttime: -1} == "M" ]] ; then
+                sdnum=$(echo $starttime | grep -o '[0-9]\+')
+                sdate=$(date --date="-$sdnum month" +"%d/%m/%Y")
+        elif [[ ${starttime: -1} == "d" ]] ; then
+                sdnum=$(echo $starttime | grep -o '[0-9]\+')
+                sdate=$(date --date="-$sdnum day" +"%d/%m/%Y")
+        fi
+fi
 
+
+if [[ $endtime == "now" ]] ; then
+        edate=$(date +"%d/%m/%Y")
+else
+        if [[ ${endtime: -1} == "w" ]] ; then
+                ednum=$(echo $endtime | grep -o '[0-9]\+')
+                edate=$(date --date="-$ednum week" +"%d/%m/%Y")
+        elif [[ ${endtime: -1} == "M" ]] ; then
+                ednum=$(echo $endtime | grep -o '[0-9]\+')
+                edate=$(date --date="-$ednum month" +"%d/%m/%Y")
+        elif [[ ${endtime: -1} == "d" ]] ; then
+                ednum=$(echo $endtime | grep -o '[0-9]\+')
+                edate=$(date --date="-$ednum day" +"%d/%m/%Y")
+        fi
+fi
+
+
+
+/home/zabbix-reports/zabbix-api-utils/repgen/r1.py "Infrastructure report by Zabbix" "ACME Corporation" "From $sdate to $edate"
 exit 0
 

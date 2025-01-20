@@ -8,12 +8,14 @@
 
 import os
 import argparse
+import zipfile
 from fpdf import FPDF
+from datetime import datetime
 
 # Set paths
+os.chdir('/home/zabbix-reports/zabbix-api-utils/repgen')
 base_dir = "repdata"
-output_pdf = "report.pdf"
-
+output_pdf = "report" + datetime.now().strftime("%Y%m%d") + ".pdf"
 class PDF(FPDF):
     def header(self):
         # Rendering logo:
@@ -132,6 +134,9 @@ host_counter=1
 for host in sorted(os.listdir(base_dir)):
     host_dir = os.path.join(base_dir, host)
     host_infofile = os.path.join(host_dir, "info.txt")
+    if not os.path.exists(host_infofile):
+        print(f"info.txt not found for host {host}. Skipping...")
+        continue
     if os.path.isdir(host_dir):
         # Add a new page for the host
         # pdf.add_page()
@@ -158,5 +163,23 @@ for host in sorted(os.listdir(base_dir)):
 # Save PDF
 pdf.output(output_pdf)
 print(f"Report generated: {output_pdf}")
+
+# Compress PDF
+def compress_file(input_file, output_zip):
+    """
+    Compress a file with the best compression possible using zipfile.
+
+    :param input_file: The file to compress.
+    :param output_zip: The name of the resulting zip file.
+    """
+    try:
+        with zipfile.ZipFile(output_zip, 'w', compression=zipfile.ZIP_DEFLATED, compresslevel=9) as zipf:
+            zipf.write(input_file, arcname=input_file.split('/')[-1])
+        print(f"File '{input_file}' successfully compressed to '{output_zip}' with best compression.")
+    except Exception as e:
+        print(f"An error occurred: {e}")
+output_zip = f"{output_pdf.split('.')[0]}.zip"
+# Example usage
+compress_file(output_pdf, output_zip)
 
 # Enjoy your report!
