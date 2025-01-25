@@ -8,12 +8,31 @@ import os.path
 import sys
 import textwrap
 import time
+from icecream import ic
 from zabbix_utils import ZabbixAPI
 from datetime import datetime, timezone
 from zoneinfo import ZoneInfo
+from termcolor import colored
+
+def strtobool(value):
+    """
+    Convert a string to a boolean represented as an integer.
+    - Returns 1 for "true" values (e.g., "y", "yes", "true", "on", "1").
+    - Returns 0 for "false" values (e.g., "n", "no", "false", "off", "0").
+    - Raises ValueError for invalid inputs.
+    """
+    true_values = {"y", "yes", "true", "on", "1"}
+    false_values = {"n", "no", "false", "off", "0"}
+    
+    value_lower = value.strip().lower()
+    if value_lower in true_values:
+        return 1
+    elif value_lower in false_values:
+        return 0
+    else:
+        raise ValueError(f"Invalid truth value: {value}")
 
 # define config helper function
-
 def ConfigSectionMap(section):
     dict1 = {}
     options = Config.options(section)
@@ -21,7 +40,8 @@ def ConfigSectionMap(section):
         try:
             dict1[option] = Config.get(section, option)
             if dict1[option] == -1:
-                DebugPrint("skip: %s" % option)
+                # DebugPrint("skip: %s" % option)
+                ic(option)
         except:
             print(("exception on %s!" % option))
             dict1[option] = None
@@ -47,15 +67,12 @@ def severitymap(level):
             return map[level]
 
 # Zabbix trigger status mapper
-
-
 def statusmap(status):
     status = int(status)
     if status < 2:
         map = ['OK', 'PROBLEM']
         color = ['green', 'red']
         try:
-            from termcolor import colored
             return colored(map[status], color[status])
         except:
             return map[status]
@@ -82,7 +99,6 @@ def alertstatusmap(status, atype=0):
     elif atype == 1:
         map = ['Run', 'Not run']
     return map[status]
-
 
 # set default vars
 try:
@@ -148,7 +164,7 @@ args = parser.parse_args()
 
 # load config module
 Config = configparser.ConfigParser()
-Config
+# Config
 
 # if configuration argument is set, test the config file
 if args.config:
@@ -165,7 +181,7 @@ try:
     username = ConfigSectionMap("Zabbix API")['username']
     password = ConfigSectionMap("Zabbix API")['password']
     api = ConfigSectionMap("Zabbix API")['api']
-    noverify = bool(distutils.util.strtobool(ConfigSectionMap("Zabbix API")["no_verify"]))
+    noverify = bool(strtobool(ConfigSectionMap("Zabbix API")["no_verify"]))
 except:
     pass
 
@@ -205,7 +221,7 @@ zapi = ZabbixAPI(url=api,user=username,password=password,validate_certs=verify)
 ##################################
 
 # Base API call
-call = {'sortfield': 'clock', 'sortorder': 'DESC',
+call = {'sortfield': 'eventid', 'sortorder': 'DESC',
         'output': 'extend', 'source': 0}
 
 if args.limit != 0:
@@ -218,10 +234,10 @@ else:
     call['selectHosts'] = 'extend'
     call['selectRelatedObject'] = 'extend'
 
-if args.problem:
-    call['value'] = 1
-elif args.ok:
-    call['value'] = 0
+# if args.problem:
+#     call['value'] = 1
+# elif args.ok:
+#     call['value'] = 0
 
 if args.ack:
     call['acknowledged'] = True
@@ -293,43 +309,46 @@ elif args.triggerids:
 
 try:
     while True:
-        events = zapi.event.get(**call)
-        if events:
+        problems = zapi.problem.get(**call)
+        if problems:
             if args.ids:
-                for event in sorted(events):
-                    eventid = event['eventid']
+                for problem in sorted(problems):
+                    eventid = problem['eventid']
                     print(eventid)
             else:
-                triggerids = [event['objectid'] for event in events]
+                triggerids = [problem['objectid'] for problem in problems]
                 triggers = zapi.trigger.get(triggerids=triggerids, output='extend',
                                             expandDescription=1, preservekeys=1, expandComment=1, selectHosts='extend')
-                #for event in sorted(events):
-                for event in events:
-                    eventid = event['eventid']
-                    etime = timestr(event['clock'])
+                for problem in problems:
+                    eventid = problem['eventid']
+                    etime = timestr(problem['clock'])
                     hostname = "<Unknown Host>"
                     trigger = "<Unknown Trigger>"
                     triggerid = "<Unknown Triggerid>"
                     severity = "<Unknown Severity>"
                     try:
-                        hostname = triggers[event['objectid']
+                        hostname = triggers[problem['objectid']
                                             ]['hosts'][0]['host']
-                        trigger = triggers[event['objectid']]['description']
+                        trigger = triggers[problem['objectid']]['description']
                         severity = severitymap(
-                            triggers[event['objectid']]['priority'])
-                        triggerid = event['objectid']
+                            triggers[problem['objectid']]['priority'])
+                        triggerid = problem['objectid']
                     except:
                         pass
-                    state = statusmap(event['value'])
-                    acked = ackmap(event['acknowledged'])
+                    #state = statusmap(problem['value'])
+                    state="STATE"
+                    acked = ackmap(problem['acknowledged'])
                     if acked == True:
                         acknowledged = "Ack: Yes"
                     else:
                         acknowledged = "Ack: No"
-                    print("%s %s: %s [%s] %s [%s](%s|%s)" % (etime, hostname, state, eventid, trigger, triggerid, severity, acknowledged))
+                    #print("%s %s: %s [%s] %s [%s](%s|%s)" % (etime, hostname, state, eventid, trigger, triggerid, severity, acknowledged))
+                    # Like Zabbix ((Monitoring->Problems)) page
+                    # Time Severity Host Problem Duration?
+                    print("%s %s %s %s %s %s" % (etime, severity, hostname, eventid, trigger, triggerid ))
                     if args.follow:
                         sys.stdout.flush()
-        if not args.follow and not events:
+        if not args.follow and not problems:
             sys.exit("Error: No events found.")
 
         if not args.follow:
