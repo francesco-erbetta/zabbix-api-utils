@@ -8,9 +8,9 @@ import os.path
 import sys
 import textwrap
 import time
+from datetime import datetime, timedelta, timezone
 from icecream import ic
 from zabbix_utils import ZabbixAPI
-from datetime import datetime, timezone
 from zoneinfo import ZoneInfo
 from termcolor import colored
 
@@ -31,6 +31,26 @@ def strtobool(value):
         return 0
     else:
         raise ValueError(f"Invalid truth value: {value}")
+
+def timestamp_to_age(timestamp, now):
+    """
+    Print the delta time between the timestamp from zabbix event "clock" 
+    and current time in a nice human readable format
+    """
+    timestamp_dt = datetime.fromtimestamp(int(timestamp))
+    delta = now - timestamp_dt
+    # humanize is too verbose IMHO
+    # return humanize.precisedelta(now - timestamp_dt, minimum_unit="minutes")
+    # return humanize.naturaltime(now - timestamp_dt)
+    days = delta.days
+    seconds = delta.seconds
+    hours = seconds // 3600
+    minutes = (seconds % 3600) // 60
+    # ic(delta, days, seconds, hours, minutes)
+    if days > 0:
+        return f"{days:02d}d {hours:02d}h {minutes:02d}m"
+    else:
+        return f"{hours:02d}h {minutes:02d}m"
 
 # define config helper function
 def ConfigSectionMap(section):
@@ -57,8 +77,8 @@ def timestr(timestamp):
 def severitymap(level):
     level = int(level)
     if level < 6:
-        map = ['Not Classified', 'Information',
-               'Warning', 'Average', 'High', 'Disaster']
+        map = ['NOT CLASSIFIED', 'INFORMATION',
+               'WARNING', 'AVERAGE', 'HIGH', 'DISASTER']
         color = [None, None, 'yellow', 'yellow', 'red', 'red']
         try:
             from termcolor import colored
@@ -124,30 +144,27 @@ To use this type of storage, create a conf file (the default is $HOME/.zabbix-ap
 """)
 group = parser.add_mutually_exclusive_group(required=True)
 group2 = parser.add_mutually_exclusive_group(required=False)
-group3 = parser.add_mutually_exclusive_group(required=False)
 group.add_argument('-H', '--hostnames',
                    help='Hostname(s) to find events for', nargs='+')
 group.add_argument('-G', '--hostgroups',
                    help='Hostgroup(s) to find events for', nargs='+')
 group.add_argument('-T', '--triggerids',
                    help='Triggerid(s) to find events for', type=int, nargs='+')
-group.add_argument(
-    '--all-hosts', help='Find events for all hosts', action='store_true')
-parser.add_argument(
-    '-n', '--numeric', help='Use numeric ids instead of names, applies to -H and -G', action='store_true')
-parser.add_argument(
-    '-L', '--limit', help='Limit the number of returned lines, default is 100. Set to 0 to disable.', default=100, type=int)
-group2.add_argument('-P', '--problem',
-                    help='Only show PROBLEM events', action='store_true')
-group2.add_argument(
-    '-O', '--ok', help='Only show OK events', action='store_true')
-parser.add_argument(
-    '-A', '--ack', help='Only show Acknowledged events', action='store_true')
+group.add_argument('--all-hosts', 
+                   help='Find events for all hosts', action='store_true')
+parser.add_argument('-n', '--numeric', 
+                    help='Use numeric ids instead of names, applies to -H and -G', action='store_true')
+parser.add_argument('-L', '--limit', 
+                    help='Limit the number of returned lines, default is 100. Set to 0 to disable.', 
+                    default=100, type=int)
+parser.add_argument('-A', '--include-ack', 
+                    help='Include Acknowledged events, default is to exclude them.', action='store_true')
 parser.add_argument('-t', '--time-period',
-                    help='Timeperiod in seconds, default is one week. Set to 0 to disable.', type=int, default=604800)
-group3.add_argument('-s', '--start-time',
+                    help='Timeperiod in seconds, default is one week. Set to 0 to disable.', 
+                    type=int, default=604800)
+group2.add_argument('-s', '--start-time',
                     help='Unix timestamp to search from', type=int)
-group3.add_argument(
+group2.add_argument(
     '-f', '--follow', help='Follow events as they occur', action='store_true')
 parser.add_argument(
     '-i', '--ids', help='Output only eventids', action='store_true')
@@ -164,7 +181,6 @@ args = parser.parse_args()
 
 # load config module
 Config = configparser.ConfigParser()
-# Config
 
 # if configuration argument is set, test the config file
 if args.config:
@@ -216,31 +232,31 @@ else:
 # Create instance, get url, login and password from user config file
 zapi = ZabbixAPI(url=api,user=username,password=password,validate_certs=verify)
 
+# Fix current execution time
+now = datetime.now()
+
 ##################################
 # Start actual API logic
 ##################################
 
 # Base API call
-call = {'sortfield': 'eventid', 'sortorder': 'DESC',
-        'output': 'extend', 'source': 0}
+call = { 'sortfield': 'eventid',
+        'sortorder': 'DESC',
+        'output': 'extend',
+        'selectHosts': 'extend',
+        'selectRelatedObject': 'extend',
+        'source': 0 }
 
 if args.limit != 0:
     call['limit'] = args.limit
 
-if args.ids:
-    call['output'] = 'eventid'
-else:
-    call['output'] = 'extend'
-    call['selectHosts'] = 'extend'
-    call['selectRelatedObject'] = 'extend'
-
-# if args.problem:
-#     call['value'] = 1
-# elif args.ok:
-#     call['value'] = 0
-
-if args.ack:
-    call['acknowledged'] = True
+# If you add this parameter you can select ack problems (include/exclude)
+# otherwise if you dont explicit it, all problems will be included.
+# https://www.zabbix.com/documentation/current/en/manual/api/reference/problem/get#retrieving-trigger-problem-events
+# true - return acknowledged problems only;
+# false - unacknowledged only.
+if not args.include_ack:
+    call['acknowledged'] = False
 
 if args.start_time:
     call['time_from'] = args.start_time
@@ -311,8 +327,9 @@ try:
     while True:
         problems = zapi.problem.get(**call)
         if problems:
+            # In this mode it will print ONLY Event ID
             if args.ids:
-                for problem in sorted(problems):
+                for problem in problems:
                     eventid = problem['eventid']
                     print(eventid)
             else:
@@ -322,16 +339,15 @@ try:
                 for problem in problems:
                     eventid = problem['eventid']
                     etime = timestr(problem['clock'])
+                    age=timestamp_to_age(problem['clock'], now)
                     hostname = "<Unknown Host>"
                     trigger = "<Unknown Trigger>"
                     triggerid = "<Unknown Triggerid>"
                     severity = "<Unknown Severity>"
                     try:
-                        hostname = triggers[problem['objectid']
-                                            ]['hosts'][0]['host']
+                        hostname = triggers[problem['objectid']]['hosts'][0]['host']
                         trigger = triggers[problem['objectid']]['description']
-                        severity = severitymap(
-                            triggers[problem['objectid']]['priority'])
+                        severity = severitymap(triggers[problem['objectid']]['priority'])
                         triggerid = problem['objectid']
                     except:
                         pass
@@ -342,10 +358,9 @@ try:
                         acknowledged = "Ack: Yes"
                     else:
                         acknowledged = "Ack: No"
-                    #print("%s %s: %s [%s] %s [%s](%s|%s)" % (etime, hostname, state, eventid, trigger, triggerid, severity, acknowledged))
-                    # Like Zabbix ((Monitoring->Problems)) page
+                    # Output like Zabbix ((Monitoring->Problems)) page
                     # Time Severity Host Problem Duration?
-                    print("%s %s %s %s %s %s" % (etime, severity, hostname, eventid, trigger, triggerid ))
+                    print("%s [%s] %s [%s] %s (%s) [%s] [Age: %s]" % (etime, severity, hostname, eventid, trigger, triggerid, acknowledged, age ))
                     if args.follow:
                         sys.stdout.flush()
         if not args.follow and not problems:
@@ -353,11 +368,12 @@ try:
 
         if not args.follow:
             break
-        call['eventid_from'] = int(eventid)+1
+        # call['eventid_from'] = int(eventid)+1
         try:
             del call['time_till']
         except:
             pass
+        print("---")
         time.sleep(5)
 
 except KeyboardInterrupt:
