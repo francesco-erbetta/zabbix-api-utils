@@ -74,28 +74,20 @@ def timestr(timestamp):
     return timestring
 
 # Zabbix severity mapper
-def severitymap(level):
+def severitymap(level,interactive):
     level = int(level)
     if level < 6:
         map = ['NOT CLASSIFIED', 'INFORMATION',
                'WARNING', 'AVERAGE', 'HIGH', 'DISASTER']
         color = [None, None, 'yellow', 'yellow', 'red', 'red']
-        try:
-            from termcolor import colored
-            return colored(map[level], color[level])
-        except:
+        if interactive == True:
+            try:
+                from termcolor import colored
+                return colored(map[level], color[level])
+            except:
+                return map[level]
+        else:
             return map[level]
-
-# Zabbix trigger status mapper
-def statusmap(status):
-    status = int(status)
-    if status < 2:
-        map = ['OK', 'PROBLEM']
-        color = ['green', 'red']
-        try:
-            return colored(map[status], color[status])
-        except:
-            return map[status]
 
 # Zabbix acknowledge status mapper
 def ackmap(acknowledged):
@@ -143,7 +135,7 @@ To use this type of storage, create a conf file (the default is $HOME/.zabbix-ap
 
 """)
 group = parser.add_mutually_exclusive_group(required=True)
-group2 = parser.add_mutually_exclusive_group(required=False)
+# group2 = parser.add_mutually_exclusive_group(required=False)
 group.add_argument('-H', '--hostnames',
                    help='Hostname(s) to find events for', nargs='+')
 group.add_argument('-G', '--hostgroups',
@@ -162,20 +154,19 @@ parser.add_argument('-A', '--include-ack',
 parser.add_argument('-t', '--time-period',
                     help='Timeperiod in seconds, default is one week. Set to 0 to disable.', 
                     type=int, default=604800)
-group2.add_argument('-s', '--start-time',
-                    help='Unix timestamp to search from', type=int)
-group2.add_argument(
-    '-f', '--follow', help='Follow events as they occur', action='store_true')
-parser.add_argument(
-    '-i', '--ids', help='Output only eventids', action='store_true')
+parser.add_argument('-o', '--output-format',
+                    choices=["syslog", "html"], default="syslog",
+                    help='Output format: syslog (default) or html (simple table).')
+parser.add_argument('-S', '--print-summary', help="Print a one-line summary count by severity", action='store_true')
+group.add_argument('-s', '--start-time', help='Unix timestamp to search from', type=int)
+parser.add_argument('-i', '--ids', help='Output only eventids', action='store_true')
 parser.add_argument('-u', '--username', help='User for the Zabbix api')
-parser.add_argument('-p', '--password',
-                    help='Password for the Zabbix api user')
+parser.add_argument('-p', '--password', help='Password for the Zabbix api user')
 parser.add_argument('-a', '--api', help='Zabbix API URL')
-parser.add_argument(
-    '--no-verify', help='Disables certificate validation when using a secure connection', action='store_true')
-parser.add_argument(
-    '-c', '--config', help='Config file location (defaults to $HOME/.zabbix-api.conf)')
+parser.add_argument('--no-verify', 
+                    help='Disables certificate validation when using a secure connection', action='store_true')
+parser.add_argument('-c', '--config', 
+                    help='Config file location (defaults to $HOME/.zabbix-api.conf)')
 
 args = parser.parse_args()
 
@@ -213,6 +204,11 @@ if args.api:
 
 if args.no_verify:
     noverify = args.no_verify
+
+if args.output_format:
+    output = args.output_format
+else:
+    output = "syslog"
 
 # test for needed params
 if not username:
@@ -323,61 +319,78 @@ elif args.triggerids:
     else:
         sys.exit("Error: No triggers found")
 
-try:
-    while True:
-        problems = zapi.problem.get(**call)
-        if problems:
-            # In this mode it will print ONLY Event ID
-            if args.ids:
-                for problem in problems:
-                    eventid = problem['eventid']
-                    print(eventid)
+def add_problem(p, plist):
+    ''' add a problem to the list'''
+    plist.append(p)
+
+problem_list = []
+
+# Manual dict to count totals by severity
+severity_counts = {"NOT CLASSIFIED": 0, "INFORMATION": 0, "WARNING": 0, "AVERAGE": 0, "HIGH": 0, "DISASTER": 0}
+
+problems = zapi.problem.get(**call)
+
+if problems:
+    # In this mode it will print ONLY Event ID
+    if args.ids:
+        for problem in problems:
+            eventid = problem['eventid']
+            print(eventid)
+    else:
+        triggerids = [problem['objectid'] for problem in problems]
+        triggers = zapi.trigger.get(triggerids=triggerids, output='extend',
+                                    expandDescription=1, preservekeys=1, expandComment=1, selectHosts='extend')
+        for problem in problems:
+            eventid = problem['eventid']
+            etime = timestr(problem['clock'])
+            age=timestamp_to_age(problem['clock'], now)
+            hostname = "<Unknown Host>"
+            trigger = "<Unknown Trigger>"
+            triggerid = "<Unknown Triggerid>"
+            severity = "<Unknown Severity>"
+            try:
+                hostname = triggers[problem['objectid']]['hosts'][0]['host']
+                trigger = triggers[problem['objectid']]['description']
+                severity = severitymap(triggers[problem['objectid']]['priority'], False)
+                triggerid = problem['objectid']
+            except:
+                pass
+            acked = ackmap(problem['acknowledged'])
+            if acked == True:
+                acknowledged = "Ack: Yes"
             else:
-                triggerids = [problem['objectid'] for problem in problems]
-                triggers = zapi.trigger.get(triggerids=triggerids, output='extend',
-                                            expandDescription=1, preservekeys=1, expandComment=1, selectHosts='extend')
-                for problem in problems:
-                    eventid = problem['eventid']
-                    etime = timestr(problem['clock'])
-                    age=timestamp_to_age(problem['clock'], now)
-                    hostname = "<Unknown Host>"
-                    trigger = "<Unknown Trigger>"
-                    triggerid = "<Unknown Triggerid>"
-                    severity = "<Unknown Severity>"
-                    try:
-                        hostname = triggers[problem['objectid']]['hosts'][0]['host']
-                        trigger = triggers[problem['objectid']]['description']
-                        severity = severitymap(triggers[problem['objectid']]['priority'])
-                        triggerid = problem['objectid']
-                    except:
-                        pass
-                    #state = statusmap(problem['value'])
-                    state="STATE"
-                    acked = ackmap(problem['acknowledged'])
-                    if acked == True:
-                        acknowledged = "Ack: Yes"
-                    else:
-                        acknowledged = "Ack: No"
-                    # Output like Zabbix ((Monitoring->Problems)) page
-                    # Time Severity Host Problem Duration?
-                    print("%s [%s] %s [%s] %s (%s) [%s] [Age: %s]" % (etime, severity, hostname, eventid, trigger, triggerid, acknowledged, age ))
-                    if args.follow:
-                        sys.stdout.flush()
-        if not args.follow and not problems:
-            sys.exit("Error: No events found.")
+                acknowledged = "Ack: No"
+            # Save in a dict for later output processing
+            curr_p = {
+                "etime": etime,
+                "severity": severity,
+                "hostname": hostname,
+                "eventid": eventid,
+                "trigger": trigger,
+                "triggerid": triggerid,
+                "acknowledged": acknowledged,
+                "age": age
+            }
+            add_problem(curr_p, problem_list)
+            severity_counts[severity] += 1
+                        
+if(len(problem_list)==0):
+    sys.exit()
 
-        if not args.follow:
-            break
-        # call['eventid_from'] = int(eventid)+1
-        try:
-            del call['time_till']
-        except:
-            pass
-        print("---")
-        time.sleep(5)
+if args.print_summary:
+    print("Total Problems: %s || NC=%s I=%s W=%s A=%s H=%s D=%s" % (len(problem_list), severity_counts['NOT CLASSIFIED'], 
+          severity_counts['INFORMATION'], severity_counts['WARNING'], severity_counts['AVERAGE'],
+          severity_counts['HIGH'], severity_counts['DISASTER']))
 
-except KeyboardInterrupt:
-    pass
+if output == "syslog":
+    # Dump list of problems to stdout in syslog-like format (eventually colorful)
+    for p in problem_list:
+        print("%s [%s] %s [%s] %s (%s) [%s] [Age: %s]" % 
+              (p["etime"], p["severity"], p["hostname"], p["eventid"], p["trigger"], 
+               p["triggerid"], p["acknowledged"], p["age"] ))
+elif output == "html":
+    # Dump list of problems in a simple HTML Table, but Summary?
+    print("html goes here...")
 
 zapi.logout()
 # And we're done...
