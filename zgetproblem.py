@@ -112,6 +112,73 @@ def alertstatusmap(status, atype=0):
         map = ['Run', 'Not run']
     return map[status]
 
+def gen_html_table(log_entries, ts, outfile):
+    mydate = ts.strftime("%a %Y-%m-%d H%H:%M")
+    html = """
+    <html>
+    <head>
+        <style>
+            table {
+                width: 80%;
+                border-collapse: collapse;
+                margin: 20px 0;
+                font-size: 12px;
+                text-align: left;
+            }
+            th, td {
+                padding: 8px;
+                border: 1px solid black;
+            }
+            th {
+                background-color: #f2f2f2;
+            }
+            .INFO { background-color: #ADD8E6; }
+            .WARNING { background-color: #FFA500; }
+            .AVERAGE { background-color: #DDAAAA; }
+            .HIGH { background-color: #FF8888; }
+            .DISASTER { background-color: #FF0000; }
+        </style>
+    </head>
+    <body>"""
+
+    html += f"""
+        <h2>Zabbix Open Problems Status - {mydate}</h2>
+        """
+    
+    html += """
+        <table>
+            <tr>
+                <th>Timestamp</th>
+                <th>Severity</th>
+                <th>Host</th>
+                <th>Problem</th>
+                <th>Age</th>
+            </tr>
+    """
+   
+    for entry in log_entries:
+        html += f"""
+            <tr class="{entry['severity']}">
+                <td>{entry['etime']}</td>
+                <td>{entry['severity']}</td>
+                <td>{entry['hostname']}</td>
+                <td>{entry['trigger']}</td>
+                <td>{entry['age']}</td>
+            </tr>
+        """
+
+    html += """
+        </table>
+        <br><hr>Sincerely, Your kind Zabbix majordomo
+    </body>
+    </html>
+    """
+
+    with open(outfile, "w", encoding="utf-8") as file:
+        file.write(html)
+    
+    return
+
 # set default vars
 try:
     defconf = os.getenv("HOME") + "/.zabbix-api.conf"
@@ -123,7 +190,7 @@ api = ""
 noverify = ""
 
 # Define commandline arguments
-parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter, description='Finds Zabbix events and prints them in a syslog like format. If the termcolor module is found, it is used to generate colored output.', epilog="""
+parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter, description='Find open problems and print them in syslog or html table.', epilog="""
 This program can use .ini style configuration files to retrieve the needed API connection information.
 To use this type of storage, create a conf file (the default is $HOME/.zabbix-api.conf) that contains at least the [Zabbix API] section and any of the other parameters:
 
@@ -134,8 +201,8 @@ To use this type of storage, create a conf file (the default is $HOME/.zabbix-ap
  no_verify=true
 
 """)
+
 group = parser.add_mutually_exclusive_group(required=True)
-# group2 = parser.add_mutually_exclusive_group(required=False)
 group.add_argument('-H', '--hostnames',
                    help='Hostname(s) to find events for', nargs='+')
 group.add_argument('-G', '--hostgroups',
@@ -157,6 +224,9 @@ parser.add_argument('-t', '--time-period',
 parser.add_argument('-o', '--output-format',
                     choices=["syslog", "html"], default="syslog",
                     help='Output format: syslog (default) or html (simple table).')
+parser.add_argument('-f', '--file-html', type=str, 
+                    help="Output file for html, default _problems.html",
+                    default="_problems.html")
 parser.add_argument('-S', '--print-summary', help="Print a one-line summary count by severity", action='store_true')
 group.add_argument('-s', '--start-time', help='Unix timestamp to search from', type=int)
 parser.add_argument('-i', '--ids', help='Output only eventids', action='store_true')
@@ -262,6 +332,11 @@ if args.time_period != 0:
         call['time_till'] = args.start_time+args.time_period
     else:
         call['time_from'] = int(time.time())-args.time_period
+
+if args.file_html:
+    out_html_file = args.file_html
+else:
+    out_html_file = '_problems.html'
 
 if args.hostgroups:
     if args.numeric:
@@ -374,13 +449,15 @@ if problems:
             add_problem(curr_p, problem_list)
             severity_counts[severity] += 1
                         
-if(len(problem_list)==0):
-    sys.exit()
-
 if args.print_summary:
-    print("Total Problems: %s || NC=%s I=%s W=%s A=%s H=%s D=%s" % (len(problem_list), severity_counts['NOT CLASSIFIED'], 
+    mydate = now.strftime("%a %Y-%m-%d H%H:%M")
+    print("Zabbix Open Problems: %s || NC=%s I=%s W=%s A=%s H=%s D=%s - At: %s" % (len(problem_list), severity_counts['NOT CLASSIFIED'], 
           severity_counts['INFORMATION'], severity_counts['WARNING'], severity_counts['AVERAGE'],
-          severity_counts['HIGH'], severity_counts['DISASTER']))
+          severity_counts['HIGH'], severity_counts['DISASTER'], mydate))
+
+if(len(problem_list)==0):
+    zapi.logout()
+    sys.exit()
 
 if output == "syslog":
     # Dump list of problems to stdout in syslog-like format (eventually colorful)
@@ -389,8 +466,10 @@ if output == "syslog":
               (p["etime"], p["severity"], p["hostname"], p["eventid"], p["trigger"], 
                p["triggerid"], p["acknowledged"], p["age"] ))
 elif output == "html":
-    # Dump list of problems in a simple HTML Table, but Summary?
-    print("html goes here...")
+    # Dump list of problems in a simple but effective HTML Table
+    # Write output to file (default _problems.html)
+    html_output = gen_html_table(problem_list, now, out_html_file)
 
 zapi.logout()
+sys.exit()
 # And we're done...
