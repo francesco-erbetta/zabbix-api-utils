@@ -114,66 +114,73 @@ def alertstatusmap(status, atype=0):
 
 def gen_html_table(log_entries, ts, outfile):
     mydate = ts.strftime("%a %Y-%m-%d H%H:%M")
-    html = """
-    <html>
-    <head>
-        <style>
-            table {
-                width: 80%;
-                border-collapse: collapse;
-                margin: 20px 0;
-                font-size: 12px;
-                text-align: left;
-            }
-            th, td {
-                padding: 8px;
-                border: 1px solid black;
-            }
-            th {
-                background-color: #f2f2f2;
-            }
-            .INFO { background-color: #ADD8E6; }
-            .WARNING { background-color: #FFA500; }
-            .AVERAGE { background-color: #DDAAAA; }
-            .HIGH { background-color: #FF8888; }
-            .DISASTER { background-color: #FF0000; }
-        </style>
-    </head>
-    <body>"""
+    if(len(log_entries)>0):
+        html = """
+        <html>
+        <head>
+            <style>
+                table {
+                    width: 80%;
+                    border-collapse: collapse;
+                    margin: 20px 0;
+                    font-size: 12px;
+                    text-align: left;
+                }
+                th, td {
+                    padding: 8px;
+                    border: 1px solid black;
+                }
+                th {
+                    background-color: #f2f2f2;
+                }
+                .INFO { background-color: #7499FF; }
+                .WARNING { background-color: #FFC859; }
+                .AVERAGE { background-color: #FFA059; }
+                .HIGH { background-color: #E97659; }
+                .DISASTER { background-color: #E45959; }
+            </style>
+        </head>
+        <body>"""
 
-    html += f"""
-        <h2>Zabbix Open Problems Status - {mydate}</h2>
+        html += f"""
+            <h2>Zabbix Open Problems Status - {mydate}</h2>
+            """
+        
+        html += """
+            <table>
+                <tr>
+                    <th>Timestamp</th>
+                    <th>Severity</th>
+                    <th>Host</th>
+                    <th>Problem</th>
+                    <th>Age</th>
+                </tr>
         """
     
-    html += """
-        <table>
-            <tr>
-                <th>Timestamp</th>
-                <th>Severity</th>
-                <th>Host</th>
-                <th>Problem</th>
-                <th>Age</th>
-            </tr>
-    """
-   
-    for entry in log_entries:
-        html += f"""
-            <tr class="{entry['severity']}">
-                <td>{entry['etime']}</td>
-                <td>{entry['severity']}</td>
-                <td>{entry['hostname']}</td>
-                <td>{entry['trigger']}</td>
-                <td>{entry['age']}</td>
-            </tr>
+        for entry in log_entries:
+            html += f"""
+                <tr class="{entry['severity']}">
+                    <td>{entry['etime']}</td>
+                    <td>{entry['severity']}</td>
+                    <td>{entry['hostname']}</td>
+                    <td>{entry['trigger']}</td>
+                    <td>{entry['age']}</td>
+                </tr>
+            """
+
+        html += """
+            </table>
+            <br><hr>Sincerely, Your kind Zabbix majordomo
+        </body>
+        </html>
         """
-
-    html += """
-        </table>
-        <br><hr>Sincerely, Your kind Zabbix majordomo
-    </body>
-    </html>
-    """
-
+    else:
+        html += f"""
+            <html><body><h2>Urrah! No open problems at {mydate}</h2>
+            <br><hr>Sincerely, Your kind Zabbix majordomo
+            </body>
+            </html>
+            """
     with open(outfile, "w", encoding="utf-8") as file:
         file.write(html)
     
@@ -446,18 +453,21 @@ if problems:
                 "acknowledged": acknowledged,
                 "age": age
             }
-            add_problem(curr_p, problem_list)
-            severity_counts[severity] += 1
+            # We consider ONLY hosts that are ENABLED and not in maintenance
+            curr_host = zapi.host.get(output="extend", filter={"host": hostname})
+            if(len(curr_host)!=1):
+                sys.exit("Getting host detail: host not found or too many hosts (should not happens!)")
+            hmaintstatus=int(curr_host[0]["maintenance_status"])
+            hstatus=int(curr_host[0]["status"])   
+            if hmaintstatus==0 and hstatus==0:
+                add_problem(curr_p, problem_list)
+                severity_counts[severity] += 1            
                         
 if args.print_summary:
     mydate = now.strftime("%a %Y-%m-%d H%H:%M")
     print("Zabbix Open Problems: %s || NC=%s I=%s W=%s A=%s H=%s D=%s - At: %s" % (len(problem_list), severity_counts['NOT CLASSIFIED'], 
           severity_counts['INFORMATION'], severity_counts['WARNING'], severity_counts['AVERAGE'],
           severity_counts['HIGH'], severity_counts['DISASTER'], mydate))
-
-if(len(problem_list)==0):
-    zapi.logout()
-    sys.exit()
 
 if output == "syslog":
     # Dump list of problems to stdout in syslog-like format (eventually colorful)
