@@ -1,3 +1,4 @@
 .zabbix-api.env
 repgen/report.pdf
 repdata/
+.venv/
