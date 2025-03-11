@@ -45,11 +45,15 @@ while true; do
 
   if [[ "$choice" == "1" ]]; then
     sed -i "s/\[cadenza\]/settimanale/g" $WORKDIR/repgen/sendmail.sh
-    echo "0 8 * * 1 source $WORKDIR/zabbix-reports-venv/bin/activate; $WORKDIR/repgen/gg.sh -s now-1w -t now; $WORKDIR/repgen/sendmail.sh" | crontab -
+    echo -e "#!/bin/bash\nsource $WORKDIR/zabbix-reports-venv/bin/activate;\n$WORKDIR/repgen/gg.sh -s now-1w -t now;\n$WORKDIR/repgen/sendmail.sh" >$WORKDIR/repgen/cronscript.sh
+    chmod +x $WORKDIR/repgen/cronscript.sh
+    echo "0 8 * * 1 $WORKDIR/repgen/cronscript.sh" | crontab -
     break
   elif [[ "$choice" == "2" ]]; then
     sed -i "s/\[cadenza\]/mensile/g" $WORKDIR/repgen/sendmail.sh
-    echo "0 0 1 * * source $WORKDIR/zabbix-reports-venv/bin/activate; $WORKDIR/repgen/gg.sh -s now-1M -t now; $WORKDIR/repgen/sendmail.sh" | crontab -
+    echo -e "#!/bin/bash\nsource $WORKDIR/zabbix-reports-venv/bin/activate;\n$WORKDIR/repgen/gg.sh -s now-1M -t now;\n$WORKDIR/repgen/sendmail.sh" >$WORKDIR/repgen/cronscript.sh
+    chmod +x $WORKDIR/repgen/cronscript.sh
+    echo "0 0 1 * * $WORKDIR/repgen/cronscript.sh" | crontab -
     break
   else
     echo "Input invalido. Inserisci 1 o 2."
